@@ -102,9 +102,27 @@ Model: `claude-haiku-4-5-20251001` — cost ~$0.004/session.
 
 ### CoreData Schema
 ```
-WorkoutSession → [ExerciseSet] → [Rep]
+WorkoutSession
+├── id, date, duration, overallFormScore
+├── coachingSummary: String?   ← persisted end-of-session Claude paragraph
+└── sets: [ExerciseSet]
+
+ExerciseSet
+├── id, exercise, repCount, duration, restDuration, formScore, flaggedReps
+└── reps: [Rep]
+
+Rep
+└── id, formScore, flaggedJoints[], timestamp
 ```
 Use `ExerciseSet` not `Set` — `Set` conflicts with Swift's standard library.
+
+`coachingSummary` is saved immediately after the end-of-session Claude call resolves (Phase 3). Add the field to the CoreData model in Phase 2 so the schema doesn't need migration later — it just stays nil until Phase 3. Configure the `WorkoutSession` → `ExerciseSet` → `Rep` relationships with **cascade delete** so deleting a session removes all children automatically.
+
+### Workout History
+- **History screen:** monthly calendar grid; days with workouts show a dot; tap a day → Workout Detail
+- **Workout Detail:** shows session stats, per-exercise breakdown, and `coachingSummary` (or placeholder if nil); includes a delete action with confirmation alert
+- **No video stored** — records are CoreData only; CloudKit sync makes them available across devices
+- **Never re-call Claude** from the history screen — display the persisted `coachingSummary` only
 
 ### Gesture Detection
 Wrist joint Y vs. shoulder Y coordinates each frame:

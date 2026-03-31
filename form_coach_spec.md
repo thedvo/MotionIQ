@@ -8,9 +8,9 @@
 
 iOS fitness app that uses the camera to automatically detect exercises, count reps, score form, log sets, and deliver AI coaching — all without the user touching their phone during a workout.
 
-**Stack:** Swift, SwiftUI, Vision framework, CoreData, CloudKit, Claude Haiku 4.5 API  
-**Min iOS:** 14+  
-**Timeline:** 4 weeks  
+**Stack:** Swift, SwiftUI, Vision framework, CoreData, CloudKit, Claude Haiku 4.5 API
+**Min iOS:** 26.2 (Xcode 26 beta / iOS 19 release track)
+**Timeline:** 4 weeks
 **Deploy:** TestFlight → App Store
 
 ---
@@ -156,6 +156,7 @@ Claude handles **language only**. All detection, counting, and scoring is on-dev
 ```
 WorkoutSession
 ├── id, date, duration, overallFormScore
+├── coachingSummary: String?   ← persisted end-of-session Claude paragraph
 └── sets: [ExerciseSet]
 
 ExerciseSet
@@ -167,6 +168,35 @@ Rep
 ```
 
 > Use `ExerciseSet` not `Set` — `Set` conflicts with Swift's standard library.
+> `coachingSummary` is saved to CoreData immediately after the end-of-session Claude call resolves. If the call fails, it remains nil and the history card shows a placeholder.
+
+---
+
+## Workout History
+
+Users can review past workouts organized by calendar month. No video is stored — records contain workout data and the AI coaching summary only.
+
+### History Screen
+- **Entry point:** tab or nav item from the main screen (always accessible, not just post-workout)
+- **Month view:** calendar grid; days with a completed workout show a dot indicator
+- **Tapping a day** → Workout Detail screen for that session
+
+### Workout Detail Screen
+Displays everything saved in `WorkoutSession`:
+- Date, total duration, overall form score
+- Per-exercise breakdown: exercise name, sets completed, total reps, avg form score
+- Claude coaching summary paragraph (or "No coaching summary available" if nil)
+- **Delete button** — confirmation alert → deletes the `WorkoutSession` and all child `ExerciseSet` and `Rep` records via CoreData cascade delete
+
+### Data Rules
+- No video stored at any point — only structured CoreData records
+- `coachingSummary` is the persisted Claude paragraph from the end-of-session call; the history screen never re-calls Claude
+- CloudKit sync (Phase 3) makes history available across the user's devices automatically
+- Deletion propagates to CloudKit on next sync
+
+### Phase Placement
+- **Phase 2:** CoreData schema includes `coachingSummary` from the start (even though Claude isn't integrated yet — field is just nil)
+- **Phase 3:** History screen UI built alongside the session summary screen; delete functionality included
 
 ---
 
@@ -204,9 +234,11 @@ Rep
 ### Phase 3 — Week 3: Summary + Claude
 - [ ] Rest timer UI + "Next Set" button
 - [ ] Session summary screen
-- [ ] Exercise history + PR detection
+- [ ] PR detection (compare current session totals against stored WorkoutSessions)
+- [ ] Workout History screen — monthly calendar view with day indicators
+- [ ] Workout Detail screen — per-session breakdown with Claude summary and delete
 - [ ] Claude Haiku 4.5 API — post-set call
-- [ ] Claude Haiku 4.5 API — end-of-session call
+- [ ] Claude Haiku 4.5 API — end-of-session call; persist result to `coachingSummary`
 - [ ] Prompt caching for system prompt
 - [ ] iCloud sync via CloudKit
 
