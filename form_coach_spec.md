@@ -213,16 +213,16 @@ Displays everything saved in `WorkoutSession`:
 
 ## Implementation Phases
 
-### Phase 1 — Week 1: Vision Foundation
-- [ ] Xcode project + SwiftUI navigation shell
-- [ ] `AVCaptureSession` camera feed
-- [ ] `VNDetectHumanBodyPoseRequest` on background thread
-- [ ] Skeleton overlay on camera feed
-- [ ] Joint angle calculation utilities
-- [ ] Rep counter for squat
-- [ ] Silhouette alignment guide + 3s countdown
+### Phase 1 — Week 1: Vision Foundation ✅
+- [x] Xcode project + SwiftUI navigation shell
+- [x] `AVCaptureSession` camera feed
+- [x] `VNDetectHumanBodyPoseRequest` on background thread
+- [x] Skeleton overlay on camera feed
+- [x] Joint angle calculation utilities
+- [x] Rep counter for squat
+- [x] Silhouette alignment guide + 3s countdown
 
-### Phase 2 — Week 2: Detection + Logging
+### Phase 2 — Week 2: Detection + Logging ← current
 - [ ] Form thresholds + scoring for all 3 exercises
 - [ ] Real-time form cues (text overlay)
 - [ ] Rule-based exercise classifier
