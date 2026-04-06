@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		378A2B342F7DD9C900F18D16 /* MotionIQ.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 378A2B322F7DD9C900F18D16 /* MotionIQ.xcdatamodeld */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		37728ED42F7B42BE002E243E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		37728EC62F7B42BD002E243E /* MotionIQ.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MotionIQ.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37728ED32F7B42BE002E243E /* MotionIQTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotionIQTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		37728EDD2F7B42BE002E243E /* MotionIQUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MotionIQUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		378A2B332F7DD9C900F18D16 /* MotionIQ.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MotionIQ.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		37728EBD2F7B42BD002E243E = {
 			isa = PBXGroup;
 			children = (
+				378A2B322F7DD9C900F18D16 /* MotionIQ.xcdatamodeld */,
 				37728EC82F7B42BD002E243E /* MotionIQ */,
 				37728ED62F7B42BE002E243E /* MotionIQTests */,
 				37728EE02F7B42BE002E243E /* MotionIQUITests */,
@@ -236,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				378A2B342F7DD9C900F18D16 /* MotionIQ.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -580,6 +587,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		378A2B322F7DD9C900F18D16 /* MotionIQ.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				378A2B332F7DD9C900F18D16 /* MotionIQ.xcdatamodel */,
+			);
+			currentVersion = 378A2B332F7DD9C900F18D16 /* MotionIQ.xcdatamodel */;
+			path = MotionIQ.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 37728EBE2F7B42BD002E243E /* Project object */;
 }

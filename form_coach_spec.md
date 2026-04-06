@@ -222,17 +222,17 @@ Displays everything saved in `WorkoutSession`:
 - [x] Rep counter for squat
 - [x] Silhouette alignment guide + 3s countdown
 
-### Phase 2 — Week 2: Detection + Logging ← current
-- [ ] Form thresholds + scoring for all 3 exercises
-- [ ] Real-time form cues (text overlay)
-- [ ] Rule-based exercise classifier
-- [ ] State machine (idle → detecting → inSet → resting)
-- [ ] Debounce timer for rest detection
-- [ ] Gesture detection (one hand / both hands)
-- [ ] CoreData schema + passive workout logging
+### Phase 2 — Week 2: Detection + Logging ✅
+- [x] Form thresholds + scoring for all 3 exercises
+- [x] Real-time form cues (text overlay)
+- [x] Rule-based exercise classifier
+- [x] State machine (idle → detecting → inSet → resting)
+- [x] Debounce timer for rest detection
+- [x] Gesture detection (one hand / both hands)
+- [x] CoreData schema + passive workout logging
 
-### Phase 3 — Week 3: Summary + Claude
-- [ ] Rest timer UI + "Next Set" button
+### Phase 3 — Week 3: Summary + Claude ← current
+- [x] Rest timer UI + "Next Set" button
 - [ ] Session summary screen
 - [ ] PR detection (compare current session totals against stored WorkoutSessions)
 - [ ] Workout History screen — monthly calendar view with day indicators
