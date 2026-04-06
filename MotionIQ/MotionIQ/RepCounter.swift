@@ -1,11 +1,7 @@
 /// Tracks rep phases for a single exercise using a hysteresis state machine.
 /// Feed the primary angle each frame via process(angle:).
-/// Phase 1 supports squat only; additional exercises added in Phase 2.
+/// Exercise is now the shared top-level enum defined in Exercise.swift.
 final class RepCounter {
-
-    enum Exercise {
-        case squat
-    }
 
     enum Phase: Equatable {
         case standing, descending, bottom, ascending
@@ -36,57 +32,66 @@ final class RepCounter {
     }
 
     /// Process one frame's primary angle. Returns true if a rep just completed.
+    /// Caller is responsible for supplying the correct angle for the exercise:
+    ///   squat/lunge → knee angle    pushup → elbow angle
     @discardableResult
     func process(angle: Double) -> Bool {
         switch exercise {
-        case .squat:
-            return processSquat(kneeAngle: angle)
+        case .squat:  return processPhases(angle: angle,
+                                           standingThreshold: Constants.squatStandingAngle,
+                                           bottomThreshold: Constants.squatBottomAngle)
+        case .pushup: return processPhases(angle: angle,
+                                           standingThreshold: Constants.pushupStandingAngle,
+                                           bottomThreshold: Constants.pushupBottomAngle)
+        case .lunge:  return processPhases(angle: angle,
+                                           standingThreshold: Constants.lungeStandingAngle,
+                                           bottomThreshold: Constants.lungeBottomAngle)
         }
     }
 
     // MARK: - Private
 
-    /// Squat rep phase machine.
-    /// Thresholds from Constants; ±hysteresis prevents jitter at boundaries.
+    /// Generic phase machine shared by all three exercises.
+    /// `standingThreshold` = angle above which = standing/top position.
+    /// `bottomThreshold`   = angle below which = bottom position.
+    /// Hysteresis (±Constants.repHysteresis) prevents jitter at boundaries.
     ///
     /// Phase transitions:
-    ///   standing    → descending  : angle drops below squatStandingAngle
-    ///   descending  → bottom      : angle drops below squatBottomAngle
-    ///   descending  → standing    : angle rises back above standing + hysteresis (partial rep, no count)
-    ///   bottom      → ascending   : angle rises above bottom + hysteresis
-    ///   ascending   → standing    : angle rises above squatStandingAngle → rep counted
-    ///   ascending   → bottom      : angle drops back below bottom (went down again mid-rep)
-    private func processSquat(kneeAngle: Double) -> Bool {
-        let standing = Constants.squatStandingAngle
-        let bottom = Constants.squatBottomAngle
+    ///   standing   → descending : angle < standingThreshold
+    ///   descending → bottom     : angle < bottomThreshold
+    ///   descending → standing   : angle > standingThreshold + hysteresis (partial — no count)
+    ///   bottom     → ascending  : angle > bottomThreshold + hysteresis
+    ///   ascending  → standing   : angle > standingThreshold → rep counted
+    ///   ascending  → bottom     : angle < bottomThreshold (went down again mid-rep)
+    private func processPhases(angle: Double,
+                                standingThreshold: Double,
+                                bottomThreshold: Double) -> Bool {
         let h = Constants.repHysteresis
 
         switch currentPhase {
         case .standing:
-            if kneeAngle < standing {
+            if angle < standingThreshold {
                 currentPhase = .descending
             }
 
         case .descending:
-            if kneeAngle < bottom {
+            if angle < bottomThreshold {
                 currentPhase = .bottom
-            } else if kneeAngle > standing + h {
-                // Rose back up before reaching bottom — not a valid rep
+            } else if angle > standingThreshold + h {
                 currentPhase = .standing
             }
 
         case .bottom:
-            if kneeAngle > bottom + h {
+            if angle > bottomThreshold + h {
                 currentPhase = .ascending
             }
 
         case .ascending:
-            if kneeAngle > standing {
+            if angle > standingThreshold {
                 currentPhase = .standing
                 repCount += 1
                 return true
-            } else if kneeAngle < bottom {
-                // Went back down mid-ascent
+            } else if angle < bottomThreshold {
                 currentPhase = .bottom
             }
         }
