@@ -1,41 +1,68 @@
 import Combine
 import Observation
+import SwiftUI
 
-/// Connects pose data to exercise logic and exposes state for the UI.
-/// Owned by WorkoutView as @State — persists for the lifetime of the view.
+/// Thin bridge between the camera pose stream and WorkoutStateMachine.
+/// Forwards poses to the machine and converts machine state for the UI.
 @Observable
 final class WorkoutViewModel {
 
-    // MARK: - Published state (observed by WorkoutView)
+    // MARK: - Published state
 
     var currentPose: PoseData?
-    var repCount: Int = 0
-    var currentPhase: RepCounter.Phase = .standing
+
+    var workoutState: WorkoutState        { stateMachine.workoutState }
+    var currentExercise: Exercise?        { stateMachine.currentExercise }
+    var repCount: Int                     { stateMachine.repCount }
+    var currentRepPhase: RepCounter.Phase { stateMachine.currentRepPhase }
+    var activeFormFlags: [FormFlag]       { stateMachine.activeFormFlags }
+    var restElapsed: TimeInterval         { stateMachine.restElapsed }
+    var sessionElapsed: TimeInterval      { stateMachine.sessionElapsed }
+    var setElapsed: TimeInterval          { stateMachine.setElapsed }
+    var completedSets: [CompletedSet]     { stateMachine.completedSets }
+
+    var isPaused: Bool { stateMachine.workoutState == .paused }
+
+    /// Form score as a SwiftUI Color.
+    var formScoreColor: Color {
+        let score = stateMachine.currentFormScore
+        if score >= Constants.formScoreGreen  { return .green }
+        if score >= Constants.formScoreYellow { return .yellow }
+        return .red
+    }
+
+    /// Highest-priority active form cue, or nil if form is good.
+    var activeCueText: String? {
+        stateMachine.activeFormFlags.first?.cueText
+    }
 
     // MARK: - Internal
 
-    /// Exposed so WorkoutView can pass captureSession to CameraPreviewView.
     let cameraProvider: LiveCameraProvider
 
-    private let repCounter = RepCounter(exercise: .squat)
+    private let stateMachine = WorkoutStateMachine()
+    private let logger = WorkoutLogger()
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
     init(provider: LiveCameraProvider = LiveCameraProvider()) {
         cameraProvider = provider
+        logger.attach(to: stateMachine)
         subscribeToPoses()
     }
 
     // MARK: - Lifecycle
 
-    func start() {
-        cameraProvider.start()
-    }
+    func start() { cameraProvider.start() }
+    func stop()  { cameraProvider.stop() }
 
-    func stop() {
-        cameraProvider.stop()
-    }
+    // MARK: - UI actions
+
+    func startWorkout()  { stateMachine.startWorkout() }
+    func startNextSet()  { stateMachine.startNextSet() }
+    func endWorkout()    { stateMachine.endWorkout() }
+    func togglePause()   { stateMachine.togglePause() }
 
     // MARK: - Private
 
@@ -45,18 +72,9 @@ final class WorkoutViewModel {
                 guard let self else { return }
                 self.currentPose = poseData
                 if let poseData {
-                    self.processPose(poseData)
+                    self.stateMachine.process(pose: poseData)
                 }
             }
             .store(in: &cancellables)
-    }
-
-    private func processPose(_ pose: PoseData) {
-        // Phase 1: squat only. Phase 2 adds the exercise classifier to select the right angle.
-        if let kneeAngle = AngleCalculator.kneeAngle(from: pose) {
-            repCounter.process(angle: kneeAngle)
-            repCount = repCounter.repCount
-            currentPhase = repCounter.currentPhase
-        }
     }
 }
