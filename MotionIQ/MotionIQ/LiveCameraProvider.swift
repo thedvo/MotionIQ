@@ -95,8 +95,8 @@ final class LiveCameraProvider: NSObject, PoseProviding {
         captureSession.sessionPreset = .high // request high-quality video
 
         guard
-            // 1. Find the back camera and create an "input" from it
-            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+            // 1. Find the front camera and create an "input" from it
+            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
             let input = try? AVCaptureDeviceInput(device: device),
             captureSession.canAddInput(input)
         else {
@@ -140,10 +140,11 @@ extension LiveCameraProvider: AVCaptureVideoDataOutputSampleBufferDelegate {
 
         //  2. Ask Vision to find a human body in the image (VNDetectHumanBodyPoseRequest)
         let request = VNDetectHumanBodyPoseRequest()
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right)
-            // `orientation: .right` fixes a rotation quirk: iPhone camera sensors are physically
-            // landscape, so every frame arrives rotated 90° clockwise. Telling Vision the
-            // orientation is `.right` corrects for this so joint coordinates come out upright.
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .leftMirrored)
+            // `.leftMirrored` corrects for two quirks of the front camera:
+            // 1. The sensor is landscape — frames arrive rotated 90° (same as back camera).
+            // 2. The front camera mirrors horizontally — `.leftMirrored` un-mirrors it so
+            //    left/right joints map correctly to the user's actual left/right side.
         try? handler.perform([request])
         
         // 3. Convert the first result (if any) to our PoseData format
