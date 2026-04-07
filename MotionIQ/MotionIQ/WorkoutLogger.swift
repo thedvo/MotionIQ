@@ -11,18 +11,35 @@ final class WorkoutLogger {
     private var currentSessionEntity: NSManagedObject?
     private var sessionStartTime: Date?
 
+    /// Retained after the session saves so `updateCoachingSummary(_:)` can
+    /// write the async Claude result back to the correct CoreData object.
+    private var lastSessionObjectID: NSManagedObjectID?
+
     init(persistence: PersistenceController = .shared) {
         self.persistence = persistence
     }
 
-    /// Connects the logger to the state machine's output callbacks.
+    /// Appends the logger's handlers to the state machine's callback arrays.
+    /// Uses append (not assignment) so WorkoutViewModel can also subscribe
+    /// without overwriting the logger's handlers.
     func attach(to machine: WorkoutStateMachine) {
-        machine.onSetCompleted = { [weak self] set in
+        machine.onSetCompleted.append { [weak self] set in
             self?.handleSetCompleted(set, machine: machine)
         }
-        machine.onSessionEnded = { [weak self] in
+        machine.onSessionEnded.append { [weak self] in
             self?.handleSessionEnded(machine: machine)
         }
+    }
+
+    /// Called by WorkoutViewModel after the end-of-session Claude call resolves.
+    /// Looks up the saved session by its CoreData object ID and writes the
+    /// coaching summary, then saves. No-op if the session was never persisted.
+    func updateCoachingSummary(_ text: String) {
+        guard let oid = lastSessionObjectID else { return }
+        let context = persistence.viewContext
+        guard let session = try? context.existingObject(with: oid) else { return }
+        session.setValue(text, forKey: "coachingSummary")
+        persistence.save()
     }
 
     // MARK: - Handlers
@@ -72,6 +89,9 @@ final class WorkoutLogger {
 
         persistence.save()
 
+        // Retain the object ID so updateCoachingSummary(_:) can find it later
+        // after the async Claude end-of-session call resolves.
+        lastSessionObjectID = currentSessionEntity?.objectID
         currentSessionEntity = nil
         sessionStartTime = nil
     }
