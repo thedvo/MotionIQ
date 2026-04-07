@@ -2,8 +2,9 @@ import SwiftUI
 
 struct WorkoutView: View {
 
-    @State private var viewModel = WorkoutViewModel()
+    @State private var viewModel  = WorkoutViewModel()
     @State private var showLegend = true
+    @State private var showSummary = false
 
     var body: some View {
         ZStack {
@@ -75,6 +76,17 @@ struct WorkoutView: View {
         .animation(.easeInOut(duration: 0.25), value: viewModel.workoutState)
         .onAppear  { viewModel.start() }
         .onDisappear { viewModel.stop() }
+        .onChange(of: viewModel.workoutState) { _, newState in
+            if newState == .sessionEnd { showSummary = true }
+        }
+        .fullScreenCover(isPresented: $showSummary, onDismiss: {
+            // Reset to a fresh workout when the summary is dismissed.
+            viewModel = WorkoutViewModel()
+            viewModel.start()
+            showSummary = false
+        }) {
+            SessionSummaryView(viewModel: viewModel)
+        }
     }
 
     // MARK: - Top bar
@@ -369,6 +381,16 @@ struct WorkoutView: View {
                                  label: "FORM",
                                  color: formColor(last.averageFormScore))
                     }
+                }
+
+                // Claude post-set micro-feedback (appears once the API call resolves)
+                if let feedback = viewModel.currentClaudeFeedback {
+                    Text(feedback)
+                        .font(.callout)
+                        .foregroundStyle(.white.opacity(0.9))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 4)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
 
                 HStack(spacing: 10) {
