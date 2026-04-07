@@ -51,9 +51,11 @@ final class WorkoutStateMachine {
     private(set) var sessionStartTime: Date?
 
     // MARK: - Callbacks
+    // Arrays instead of single closures so WorkoutLogger and WorkoutViewModel
+    // can both subscribe without overwriting each other.
 
-    var onSetCompleted: ((CompletedSet) -> Void)?
-    var onSessionEnded: (() -> Void)?
+    var onSetCompleted: [(CompletedSet) -> Void] = []
+    var onSessionEnded: [() -> Void] = []
 
     // MARK: - Detectors
 
@@ -268,7 +270,7 @@ final class WorkoutStateMachine {
                                        duration: duration,
                                        formScores: setRepScores)
                 completedSets.append(set)
-                onSetCompleted?(set)
+                onSetCompleted.forEach { $0(set) }
             }
 
         case .paused:
@@ -282,7 +284,7 @@ final class WorkoutStateMachine {
             stopInactivityTimer()
             stopRestTimer()
             stopSessionTimer()
-            onSessionEnded?()
+            onSessionEnded.forEach { $0() }
         }
     }
 
